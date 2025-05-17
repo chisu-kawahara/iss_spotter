@@ -22,9 +22,10 @@ const fetchMyIP = function(callback) {
   });
 };
 
-//Define the function to fetch coordinates by IP
 const fetchCoordsByIP = function(ip, callback) {
-  needle.get(`https://freegeoip.app/json/${ip}`, (error, response, body) => {
+  const url = `https://ipwho.is/${ip}`;
+
+  needle.get(url, (error, response, body) => {
     if (error) return callback(error, null);
 
     if (response.statusCode !== 200) {
@@ -32,10 +33,19 @@ const fetchCoordsByIP = function(ip, callback) {
       return;
     }
 
-    const { latitude, longitude } = JSON.parse(body);
+    // The API may return 200 even if the IP is invalid — check the `success` field
+    if (!body.success) {
+      const message = `Success status was false. Server message says: ${body.message} when fetching for IP ${ip}`;
+      callback(Error(message), null);
+      return;
+    }
+
+    const { latitude, longitude } = body;
     callback(null, { latitude, longitude });
   });
 };
 
 
+
 module.exports = { fetchMyIP };
+module.exports = { fetchMyIP, fetchCoordsByIP };
